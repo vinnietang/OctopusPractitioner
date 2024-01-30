@@ -1,0 +1,161 @@
+step "run-configure-sql-server-runbook" {
+    name = "Run Configure SQL Server Runbook"
+
+    action {
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-44"
+            Octopus.Action.Template.Version = "14"
+            Run.Runbook.Api.Key = "#{Project.Runbook.Api.Key}"
+            Run.Runbook.AutoApproveManualInterventions = "No"
+            Run.Runbook.Base.Url = "#{Octopus.Web.ServerUri}"
+            Run.Runbook.CancelInSeconds = "1800"
+            Run.Runbook.DateTime = "N/A"
+            Run.Runbook.Environment.Name = "#{Octopus.Environment.Name}"
+            Run.Runbook.Machines = "N/A"
+            Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
+            Run.Runbook.Name = "Configure SQL Server"
+            Run.Runbook.Project.Name = "#{Octopus.Project.Name}"
+            Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
+            Run.Runbook.UsePublishedSnapShot = "True"
+            Run.Runbook.Waitforfinish = "True"
+        }
+        worker_pool = "hosted-windows"
+    }
+}
+
+step "generate-what-if-report" {
+    name = "Generate What If Report"
+
+    action {
+        properties = {
+            Database.Deploy.ConnectionString = "#{Project.Connection.String}"
+            Database.Deploy.Package = "{\"PackageId\":\"Trident.Database\",\"FeedId\":\"octopus-server-built-in\"}"
+            Database.Deploy.PathToDBUpExe = ".\\Octopus.Trident.Database.DbUp"
+            Database.Deploy.ReportPath = "#{Project.Database.Report.Path}"
+            Database.Deploy.WhatIf = "True"
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-42"
+            Octopus.Action.Template.Version = "0"
+        }
+        worker_pool = "hosted-windows"
+
+        packages "Database.Deploy.Package" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Database"
+            properties = {
+                Extract = "True"
+                PackageParameterName = "Database.Deploy.Package"
+                Purpose = ""
+                SelectionMode = "deferred"
+            }
+        }
+    }
+}
+
+step "dba-review-delta-script" {
+    name = "DBA Review Delta Script"
+
+    action {
+        action_type = "Octopus.Manual"
+        properties = {
+            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
+            Octopus.Action.Manual.Instructions = "Please review the delta script that was generated."
+            Octopus.Action.Manual.ResponsibleTeamIds = "dba,global/octopus-managers"
+        }
+    }
+}
+
+step "deploy-database-changes" {
+    name = "Deploy Database Changes"
+
+    action {
+        properties = {
+            Database.Deploy.ConnectionString = "#{Project.Connection.String}"
+            Database.Deploy.Package = "{\"PackageId\":\"Trident.Database\",\"FeedId\":\"octopus-server-built-in\"}"
+            Database.Deploy.PathToDBUpExe = ".\\Octopus.Trident.Database.DbUp"
+            Database.Deploy.ReportPath = "#{Project.Database.Report.Path}"
+            Database.Deploy.WhatIf = "False"
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-42"
+            Octopus.Action.Template.Version = "0"
+        }
+        worker_pool = "hosted-windows"
+
+        packages "Database.Deploy.Package" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Database"
+            properties = {
+                Extract = "True"
+                PackageParameterName = "Database.Deploy.Package"
+                Purpose = ""
+                SelectionMode = "deferred"
+            }
+        }
+    }
+}
+
+step "deploy-trident-web-application" {
+    name = "Deploy Trident Web Application"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.TentaclePackage"
+        properties = {
+            Octopus.Action.EnabledFeatures = "Octopus.Features.JsonConfigurationVariables"
+            Octopus.Action.Package.DownloadOnTentacle = "False"
+            Octopus.Action.Package.FeedId = "octopus-server-built-in"
+            Octopus.Action.Package.JsonConfigurationVariablesTargets = "appSettings.json"
+            Octopus.Action.Package.PackageId = "Trident.Web"
+        }
+        worker_pool_variable = ""
+
+        packages {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Web"
+            properties = {
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
+
+step "verify-application" {
+    name = "Verify application"
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"The application has been successfully verified!\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "hosted-windows"
+    }
+}
+
+step "notify-team-of-deployment-status" {
+    condition = "Always"
+    name = "Notify team of deployment status"
+
+    action {
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-41"
+            Octopus.Action.Template.Version = "15"
+            ssn_Color = "good"
+            ssn_HookUrl = "#{Notification.Slack.Webhook.Url}"
+            ssn_IconUrl = "https://octopus.com/content/resources/favicon.png"
+            ssn_Message = "#{Notification.Body.Text}"
+            ssn_Title = "#{Notification.Subject.Text}"
+            ssn_Username = "Octopus Deploy"
+        }
+        worker_pool = "hosted-windows"
+    }
+}
