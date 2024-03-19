@@ -3,7 +3,6 @@ step "run-configure-sql-server-runbook" {
 
     action {
         properties = {
-            Octopus.Action.RunOnServer = "true"
             Octopus.Action.Template.Id = "ActionTemplates-44"
             Octopus.Action.Template.Version = "14"
             Run.Runbook.Api.Key = "#{Project.Runbook.Api.Key}"
@@ -34,7 +33,6 @@ step "generate-what-if-report" {
             Database.Deploy.PathToDBUpExe = ".\\Octopus.Trident.Database.DbUp"
             Database.Deploy.ReportPath = "#{Project.Database.Report.Path}"
             Database.Deploy.WhatIf = "True"
-            Octopus.Action.RunOnServer = "true"
             Octopus.Action.Template.Id = "ActionTemplates-42"
             Octopus.Action.Template.Version = "0"
         }
@@ -63,6 +61,7 @@ step "dba-review-delta-script" {
             Octopus.Action.Manual.BlockConcurrentDeployments = "False"
             Octopus.Action.Manual.Instructions = "Please review the delta script that was generated."
             Octopus.Action.Manual.ResponsibleTeamIds = "dba,global/octopus-managers"
+            Octopus.Action.RunOnServer = "false"
         }
     }
 }
@@ -77,7 +76,6 @@ step "deploy-database-changes" {
             Database.Deploy.PathToDBUpExe = ".\\Octopus.Trident.Database.DbUp"
             Database.Deploy.ReportPath = "#{Project.Database.Report.Path}"
             Database.Deploy.WhatIf = "False"
-            Octopus.Action.RunOnServer = "true"
             Octopus.Action.Template.Id = "ActionTemplates-42"
             Octopus.Action.Template.Version = "0"
         }
@@ -111,6 +109,7 @@ step "deploy-trident-web-application" {
             Octopus.Action.Package.FeedId = "octopus-server-built-in"
             Octopus.Action.Package.JsonConfigurationVariablesTargets = "appSettings.json"
             Octopus.Action.Package.PackageId = "Trident.Web"
+            Octopus.Action.RunOnServer = "false"
         }
         worker_pool_variable = ""
 
@@ -131,7 +130,6 @@ step "verify-application" {
     action {
         action_type = "Octopus.Script"
         properties = {
-            Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = "Write-Highlight \"The application has been successfully verified!\""
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
@@ -146,7 +144,6 @@ step "notify-team-of-deployment-status" {
 
     action {
         properties = {
-            Octopus.Action.RunOnServer = "true"
             Octopus.Action.Template.Id = "ActionTemplates-41"
             Octopus.Action.Template.Version = "15"
             ssn_Color = "good"
@@ -157,5 +154,23 @@ step "notify-team-of-deployment-status" {
             ssn_Username = "Octopus Deploy"
         }
         worker_pool = "hosted-windows"
+    }
+}
+
+step "run-a-script" {
+    name = "Run a Script"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = "Write-Host \"Hello world\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
     }
 }
