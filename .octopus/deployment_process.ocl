@@ -1,5 +1,4 @@
 step "run-configure-sql-server-runbook" {
-    condition = "Always"
     name = "Run Configure SQL Server Runbook"
 
     action {
