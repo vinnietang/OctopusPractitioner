@@ -1,5 +1,5 @@
 step "run-configure-sql-server-runbook" {
-    name = "Run Configure SQL Server Runbook"
+    name = "Run Configure SQL Server Runbook 2"
 
     action {
         properties = {
