@@ -177,11 +177,11 @@ step "run-a-script" {
         worker_pool_variable = ""
 
         packages "test-image-png" {
-            acquisition_location = "Server"
-            feed = "octopus-server-built-in"
+            acquisition_location = "ExecutionTarget"
+            feed = "test-docker-external-feed"
             package_id = "test-image-png"
             properties = {
-                Extract = "True"
+                Extract = "False"
                 Purpose = ""
                 SelectionMode = "immediate"
             }
