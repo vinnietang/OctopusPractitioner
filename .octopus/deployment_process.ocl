@@ -188,3 +188,39 @@ step "run-a-script" {
         }
     }
 }
+
+step "run-a-script-2" {
+    name = "Run a Script 2"
+    properties = {
+        Octopus.Action.TargetRoles = "cac-target-tag"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.GitRepository.Source = "External"
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptFileName = "Scripts/MyScript.sh"
+            Octopus.Action.Script.ScriptSource = "GitRepository"
+        }
+        worker_pool_variable = ""
+
+        git_dependencies {
+            default_branch = "main"
+            git_credential_id = "GitCredentials-161"
+            git_credential_type = "Library"
+            repository_uri = "https://github.com/vinnietang/cac-test-1.git"
+        }
+
+        packages "test-image-png" {
+            acquisition_location = "ExecutionTarget"
+            feed = "test-docker-external-feed"
+            package_id = "test-image-png"
+            properties = {
+                Extract = "False"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
