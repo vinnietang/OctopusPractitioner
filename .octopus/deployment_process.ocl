@@ -197,6 +197,7 @@ step "run-a-script-2" {
 
     action {
         action_type = "Octopus.Script"
+        channels = ["default"]
         properties = {
             Octopus.Action.GitRepository.Source = "External"
             Octopus.Action.RunOnServer = "false"
@@ -218,6 +219,28 @@ step "run-a-script-2" {
             package_id = "test-image-png"
             properties = {
                 Extract = "False"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+
+        packages "Trident.Database" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Database"
+            properties = {
+                Extract = "True"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+
+        packages "Trident.Web" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Web"
+            properties = {
+                Extract = "True"
                 Purpose = ""
                 SelectionMode = "immediate"
             }
