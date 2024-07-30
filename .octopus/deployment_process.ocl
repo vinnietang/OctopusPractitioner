@@ -197,7 +197,7 @@ step "run-a-script-2" {
 
     action {
         action_type = "Octopus.Script"
-        channels = ["default", "release"]
+        channels = ["default", "release", "test-channel-2"]
         properties = {
             Octopus.Action.GitRepository.Source = "External"
             Octopus.Action.RunOnServer = "false"
